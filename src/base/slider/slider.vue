@@ -31,7 +31,6 @@
       }
     },
     setup(props,context) {
-      console.log("============slider")
       const state = reactive({
         dots: [],
         currentPageIndex: 0,
