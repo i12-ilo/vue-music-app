@@ -43,18 +43,18 @@
       const sliderGroup = ref(null);
       onMounted(()=>{
         setTimeout(() => {
-         _setSliderWidth()
-          _initDots()
-         _initSlider()
+         setSliderWidth()
+          initDots()
+         initSlider()
          if (props.autoPlay) {
-            _play()
+            play()
           }
         }, 20)
         window.addEventListener('resize', () => {
           if (!state.slider) {
             return
           }
-          _setSliderWidth(true)
+          setSliderWidth(true)
           state.slider.refresh()
         })
       })
@@ -62,7 +62,7 @@
       onUnmounted(()=>{
          clearTimeout(state.timer)
       })
-       const _setSliderWidth = (isResize)=>{
+       const setSliderWidth = (isResize)=>{
          state.children = sliderGroup.value.children
          let width = 0
          let sliderWidth =slider.value.clientWidth
@@ -71,6 +71,7 @@
            addClass(child, 'slider-item')
 
            child.style.width = sliderWidth + 'px'
+           child.style.height = 300+'px'
            width += sliderWidth
          }
          if (props.loop && !isResize) {
@@ -78,7 +79,7 @@
          }
          sliderGroup.value.style.width = width + 'px'
        }
-     const  _initSlider =()=> {
+     const  initSlider =()=> {
          sliderWrapper = new BScroll(slider.value, {
            scrollX: true,
            scrollY: false,
@@ -98,14 +99,14 @@
 
            if (props.autoPlay) {
              clearTimeout(state.timer)
-             _play()
+             play()
            }
          })
        }
-     const  _initDots =()=> {
+     const  initDots =()=> {
          state.dots = new Array(state.children.length)
        }
-    const   _play=() =>{
+    const   play=() =>{
          let pageIndex = state.currentPageIndex + 1
          if (props.loop) {
            pageIndex += 1
@@ -117,10 +118,10 @@
        }
        return {
          state,
-         _initSlider,
-         _play,
-         _initDots,
-         _setSliderWidth,
+         initSlider,
+         play,
+         initDots,
+         setSliderWidth,
          slider,
          sliderGroup
        }
@@ -142,7 +143,6 @@
         box-sizing: border-box
         overflow: hidden
         text-align: center
-        height: 300px
         a
           display: block
           width: 100%
@@ -151,7 +151,7 @@
         img
           display: block
           width: 100%
-          height: 300px
+          height: 100%
     .dots
       position: absolute
       right: 0

@@ -1,15 +1,15 @@
 <template>
   <div class="recommend" ref="recommend">
-    <scroll ref="scroll" class="recommend-content" :data="discList">
+    <scroll ref="scrollT" class="recommend-content" :data="discList">
     <div>
       <div v-if="recommends.length" class="slider-wrapper" ref="sliderWrapper">
-        <!-- <slider>
+        <slider>
             <div v-for="item in recommends" :key="item.id">
               <a :href="item.linkUrl">
-                <img class="needsclick"  :src="item.picUrl" />
+                <img class="needsclick"   :src="item.picUrl" />
               </a>
             </div>
-          </slider> -->
+          </slider>
       </div>
       <div class="recommend-list">
         <h1 class="list-title">热门歌单推荐</h1>
@@ -39,12 +39,12 @@
 </template>
 
 <script>
-// import Slider from "base/slider/slider";
+import Slider from "base/slider/slider";
 
 import Scroll from "base/scroll/scroll";
 import Loading from "base/loading/loading";
 import { RecomMV, getRecommend } from "api/recommend";
-import { reactive, toRefs, onMounted } from "vue";
+import { reactive, toRefs, onMounted, ref } from "vue";
 export default {
   setup(props, context) {
     console.log("===============");
@@ -53,20 +53,15 @@ export default {
       discList: [],
       checkloaded: false,
     });
-    // const recomment = ref(null);
-    // const scroll = ref(null);
 
-    // const handlePlayList = playlist => {
-    //   const bottom = playlist.length > 0 ? "60px" : "";
-    //   recomment.value.style.bottom = bottom;
-    //   scroll.value.refresh();
-    // };
-    // const loadImage = () => {
-    //   if (!state.checkloaded) {
-    //     state.checkloaded = true;
-    //     // scroll.value.refresh();
-    //   }
-    // };
+    const recomment = ref(null);
+    const scrollT = ref(null);
+  
+    const handlePlayList = playlist => {
+      const bottom = playlist.length > 0 ? "60px" : "";
+      recomment.value.style.bottom = bottom;
+      scrollT.value.refresh();
+    };
     onMounted(() => {
       RecomMV("/personalized/mv").then((res) => {
         // console.log(state.recommends);
@@ -82,15 +77,15 @@ export default {
 
     return {
       ...toRefs(state),
-      // handlePlayList,
+      handlePlayList,
       // loadImage,
-      // scroll,
-      // recomment
+      scrollT,
+      recomment
     };
   },
 
   components: {
-    // Slider,
+    Slider,
     Scroll,
     Loading,
   },
