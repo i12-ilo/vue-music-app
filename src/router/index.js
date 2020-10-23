@@ -12,6 +12,11 @@ const routes = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () => import('../components/recommend/recommend.vue')
+  },
+  {
+    path:"/singer",
+    name:"singer",
+    component:()=>import("../components/singer/singer.vue")
   }
 ]
 
