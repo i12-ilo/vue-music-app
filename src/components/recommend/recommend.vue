@@ -6,7 +6,7 @@
         <slider>
             <div v-for="item in recommends" :key="item.id">
               <a :href="item.linkUrl">
-                <img class="needsclick" style="width:414px" :src="item.picUrl" />
+                <img class="needsclick" style="width:100%" :src="item.picUrl" />
               </a>
             </div>
           </slider>
@@ -47,7 +47,6 @@ import { RecomMV, getRecommend } from "api/recommend";
 import { reactive, toRefs, onMounted, ref } from "vue";
 export default {
   setup(props, context) {
-    console.log("===============");
     const state = reactive({
       recommends: [],
       discList: [],

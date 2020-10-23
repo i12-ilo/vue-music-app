@@ -45,17 +45,16 @@
          setSliderWidth()
          initSlider()
          initDots()
-         console.log('=====dots',state.dots)
          if (props.autoPlay) {
             play()
           }
         }, 20)
         window.addEventListener('resize', () => {
-          if (!state.slider) {
+          if (!sliderWrapper) {
             return
           }
           setSliderWidth(true)
-          state.slider.value.refresh()
+          sliderWrapper.refresh()
         })
       })
 
@@ -140,6 +139,7 @@
         box-sizing: border-box
         overflow: hidden
         text-align: center
+        background-color:red
         a
           display: block
           width: 100%
