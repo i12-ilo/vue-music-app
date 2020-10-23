@@ -13,7 +13,7 @@
 <script type="text/ecmascript-6">
   import {addClass} from 'common/js/dom'
   import BScroll from 'better-scroll'
-  import {reactive, onMounted, onUnmounted, ref } from 'vue'
+  import {reactive, onMounted, onUnmounted, ref, toRefs } from 'vue'
   export default {
     name: 'slider',
     props: {
@@ -43,8 +43,9 @@
       onMounted(()=>{
         setTimeout(() => {
          setSliderWidth()
-          initDots()
          initSlider()
+         initDots()
+         console.log('=====dots',state.dots)
          if (props.autoPlay) {
             play()
           }
@@ -54,7 +55,7 @@
             return
           }
           setSliderWidth(true)
-          state.slider.refresh()
+          state.slider.value.refresh()
         })
       })
 
@@ -67,10 +68,9 @@
          let sliderWidth =slider.value.clientWidth
          for (let i = 0; i < state.children.length; i++) {
            let child = state.children[i]
-           addClass(child, 'slider-item')
-
+           addClass(child,'slider-item')
            child.style.width = sliderWidth + 'px'
-           child.style.height = 300+'px'
+           child.style.float="left"
            width += sliderWidth
          }
          if (props.loop && !isResize) {
@@ -88,14 +88,12 @@
            snapThreshold: 0.3,
            snapSpeed: 400
          });
-         console.log(sliderWrapper)
          sliderWrapper.on('scrollEnd', () => {
            let pageIndex = sliderWrapper.getCurrentPage().pageX
            if (props.loop) {
              pageIndex -= 1
            }
            state.currentPageIndex = pageIndex
-
            if (props.autoPlay) {
              clearTimeout(state.timer)
              play()
@@ -103,7 +101,7 @@
          })
        }
      const  initDots =()=> {
-         state.dots = new Array(state.children.length)
+         state.dots = new Array(sliderGroup.value.children.length)
        }
     const   play=() =>{
          let pageIndex = state.currentPageIndex + 1
@@ -116,7 +114,7 @@
          }, props.interval)
        }
        return {
-         state,
+         ...toRefs(state),
          initSlider,
          play,
          initDots,
@@ -150,12 +148,12 @@
         img
           display: block
           width: 100%
-          height: 100%
     .dots
       position: absolute
       right: 0
       left: 0
       bottom: 12px
+      transform: translateZ(1px)
       text-align: center
       font-size: 0
       .dot
