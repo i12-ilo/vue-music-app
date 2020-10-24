@@ -68,7 +68,9 @@
       "no-mixed-spaces-and-tabs": "off",
       "key-spacing": "off",
       "comma-dangle": "off",
-      "space-before-blocks":"off"
+      "space-before-blocks":"off",
+      "spaced-comment":"off",
+      "semi-spacing":"off"
     }
   },
   "browserslist": [

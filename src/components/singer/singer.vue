@@ -3,59 +3,64 @@
 </template>
 
 <script>
-import { onMounted, reactive } from "vue";
+import { onMounted, reactive, watch } from "vue";
 import { hotSinger, letterSinger } from "api/singer.js";
 export default {
   setup() {
-    const HOT_NAME = '热门'
     const state = reactive({
-      singers: [],
-    });
-
+      singers:[],
+      letterArr:[]
+    })
+    let hot = []
     onMounted(() => {
-      hotSinger().then((res) => {
-        console.log(res);
-        if (res.statusText === "OK" && res.status === 200) {
-          console.log("33333");
-          res.data.artists.map((curobj, index) => {
-            state.hot.push({
-              picUrl: curobj.picUrl,
-              name: curobj.name,
-            });
-          });
-          console.log(state.hot);
-        }
-      });
-      letterSinger("a").then((res) => {
-        console.log("====a", res);
-      });
-    });
-    
-    const normalizaSinger=()=>{
-      let map = {
-        hot: {
-          title:HOT_NAME,
-          items:[]
-        }
-      }
-      //处理热门歌手数据
-      hotSinger().then((res) => {
-        if (res.statusText === "OK" && res.status === 200) {
-          res.data.artists.map((curobj, index) => {
-            map.hot.items.push({
-              avatar: curobj.picUrl,
-              name: curobj.name,
-            });
-          });
-        }
+      getHotSingerArr().then(res=>{
+        let temp = [];
+        res.map((item,index)=>{
+          temp.push({
+            name:item.name,
+            avatar:item.img1v1Url
+          })
+        })
+        hot.push({
+          title:"热门",
+          item:temp
+        })
       })
-      
-      // 处理26个字母的歌手列表
-
+      getSingerByLetter()
+    });
+    // 按照字母分类的歌手列表
+    const getSingerByLetter = ()=>{
+        const letterItems = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
+        for (let i = 0;i<26;i++){
+          letterSinger(letterItems[i]).then(res=>{
+            state.letterArr.push({
+              title:letterItems[i],
+              item:res.data.artists
+            })
+          })
+        }
     }
-  
-  
-  },
+    // 热门歌手列表
+    const getHotSingerArr = async()=>{
+      const result = await hotSinger()
+      return result.data.artists
+    }
+    // 拿到热门歌手和按照字母分类的歌手列表
+    const normalizaSinger = (hotList,allLetterSinger) => {
+      //  想拿到的allLetterSinger数组的结构是 [{title:'a',items:[]}]
+      // 但这个结构不一定是个有序的，在操作它之前可以先排序
+      allLetterSinger.sort((a,b)=>{
+        return a.title.charCodeAt(0) - b.title.charCodeAt(0)
+      })
+       state.singers = hotList.concat(allLetterSinger)
+    }
+   watch(()=>state.letterArr.length,(cur,pre)=>{
+    //  监视数据的变化，一旦获取到了数据，即可更改state.singers
+     if (cur===26&&hot.length===1){
+       normalizaSinger(hot,state.letterArr)
+     }
+   })
+ }
 };
 </script>
 
