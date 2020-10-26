@@ -5,7 +5,8 @@ export function hotSinger() {
     return Axios.get('/artist/list', {
         params: {
             initial: -1,
-            limit: 10
+            limit: 5,
+            area:16
         }
     })
 }
@@ -15,7 +16,8 @@ export function letterSinger(letter) {
     return Axios.get('/artist/list', {
         params: {
             initial: letter,
-            limit: 10
+            limit: 4,
+            area:16
         }
     })
 }

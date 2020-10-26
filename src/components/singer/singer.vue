@@ -1,10 +1,14 @@
 <template>
-  <div>singer</div>
+  <div class="singer" ref="singer">
+    <list-view v-if='singers&&singers.length>0' @select="selectSinger" :data="singers" ref="list"></list-view>
+    <router-view></router-view>
+  </div>
 </template>
 
 <script>
-import { onMounted, reactive, watch } from "vue";
+import { onMounted, reactive, watch, toRefs } from "vue";
 import { hotSinger, letterSinger } from "api/singer.js";
+import ListView from 'base/listview/listView'
 export default {
   setup() {
     const state = reactive({
@@ -53,6 +57,7 @@ export default {
         return a.title.charCodeAt(0) - b.title.charCodeAt(0)
       })
        state.singers = hotList.concat(allLetterSinger)
+       console.log(state.singers.length)
     }
    watch(()=>state.letterArr.length,(cur,pre)=>{
     //  监视数据的变化，一旦获取到了数据，即可更改state.singers
@@ -60,9 +65,23 @@ export default {
        normalizaSinger(hot,state.letterArr)
      }
    })
+
+   return {
+     ...toRefs(state),
+     getSingerByLetter,
+     getHotSingerArr,
+     normalizaSinger
+   }
+},
+  components:{
+   ListView:ListView
  }
 };
 </script>
-
-<style>
+<style scoped lang="stylus" rel="stylesheet/stylus">
+  .singer
+    position: fixed
+    top: 88px
+    bottom: 0
+    width: 100%
 </style>

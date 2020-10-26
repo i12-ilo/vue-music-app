@@ -33,7 +33,8 @@
     "eslint-plugin-standard": "^4.0.0",
     "eslint-plugin-vue": "^7.0.0-0",
     "stylus": "^0.54.7",
-    "stylus-loader": "^3.0.2"
+    "stylus-loader": "^3.0.2",
+    "vue-lazyload": "^1.3.3"
   },
   "eslintConfig": {
     "root": false,
@@ -68,9 +69,11 @@
       "no-mixed-spaces-and-tabs": "off",
       "key-spacing": "off",
       "comma-dangle": "off",
-      "space-before-blocks":"off",
-      "spaced-comment":"off",
-      "semi-spacing":"off"
+      "space-before-blocks": "off",
+      "spaced-comment": "off",
+      "semi-spacing": "off",
+      "no-debugger":"off",
+      "no-console":"off"
     }
   },
   "browserslist": [

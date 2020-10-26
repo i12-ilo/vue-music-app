@@ -15,5 +15,8 @@ module.exports = {
             .set('assets', resolve('src/assets'))
             .set('base', resolve('src/base'))
             
+    },
+    configureWebpack: {
+        devtool: '#eval-source-map'
     }
 }

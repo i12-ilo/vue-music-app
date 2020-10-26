@@ -9,7 +9,7 @@ import BScroll from "better-scroll";
 import { onMounted, ref } from "vue";
 export default {
   props: {
-    probType: {
+    probeType: {
       type: Number,
       default: 1,
     },
@@ -40,7 +40,6 @@ export default {
   },
 
   setup(props, context) {
-    console.log("=============scroll")
    let scrollWrap = null;
     const wrapper = ref(null);
     onMounted(() => {
@@ -59,21 +58,21 @@ export default {
       });
       if (props.listenScroll) {
           scrollWrap.on("scroll", (pos) => {
-          scrollWrap.emit("scroll", pos);
+          context.emit("scroll", pos);
         });
       }
 
       if (props.pullup) {
         scrollWrap.on("scrollEnd", () => {
           if (scrollWrap.y <= scrollWrap.maxScrollY + 50) {
-            scrollWrap.emit("scrollToEnd");
+            // context.emit("scrollToEnd");
           }
         });
       }
 
       if (props.beforeScroll) {
         scrollWrap.on("beforeScrollStart", () => {
-          scrollWrap.emit("beforeScroll");
+          // context.emit("beforeScroll");
         });
       }
     };
@@ -91,9 +90,9 @@ export default {
       scrollWrap &&
        scrollWrap.scrollto.apply(scrollWrap, arguments);
     };
-    const scrollToElement = () => {
+    const scrollToElement = (...args) => {
       scrollWrap &&
-       scrollWrap.scrollToElement.apply(scrollWrap, arguments);
+      scrollWrap.scrollToElement(...args);
     };
     return {
       wrapper,
