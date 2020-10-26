@@ -53,12 +53,13 @@ export default {
         return;
       }
       scrollWrap = new BScroll(wrapper.value, {
-        probType: props.probType,
+        probeType: props.probeType,
         click: props.click,
       });
+      
       if (props.listenScroll) {
           scrollWrap.on("scroll", (pos) => {
-          context.emit("scroll", pos);
+           context.emit("scroll", pos);
         });
       }
 

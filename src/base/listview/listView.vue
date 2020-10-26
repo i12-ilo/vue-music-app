@@ -48,7 +48,7 @@
 import Scroll from "base/scroll/scroll";
 import Loading from "base/loading/loading";
 import { getData } from "common/js/dom";
-import { reactive, ref, computed, watch, toRefs } from "vue";
+import { reactive, ref, computed, watch, toRefs, onMounted } from "vue";
 
 const TITLE_HEIGHT = 30;
 const ANCHOR_HEIGHT = 18;
@@ -70,6 +70,9 @@ export default {
       listHeight: [],
       fixedTop:0
     });
+    onMounted(()=>{
+      calculateHeight()
+    })
     const listview = ref(null);
     const listGroup = ref(null);
     const fixed = ref(null)
@@ -111,6 +114,7 @@ export default {
     };
     const scrollTo = (index) => {
       state.scrollY = -state.listHeight[index];
+      console.log(listview.value.hasVerticalScroll);
       listview.value.scrollToElement(listGroup.value.children[index], 0);
     };
     const shortcutList = computed(() => {
@@ -130,6 +134,7 @@ export default {
     watch(
       () => props.data,
       () => {
+        console.log("执行了")
         setTimeout(() => {
           calculateHeight();
         }, 20);
@@ -170,7 +175,6 @@ export default {
         fixed.value.style.transform = `translate3d(0,${fixedTop}px,0)`;
       }
     );
-
     return {
       ...toRefs(state),
     listview,
