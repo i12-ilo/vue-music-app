@@ -107,7 +107,6 @@
          if (props.loop) {
            pageIndex += 1
          }
-         console.log(sliderWrapper)
          state.timer = setTimeout(() => {
            sliderWrapper.goToPage(pageIndex, 0, 400)
          }, props.interval)

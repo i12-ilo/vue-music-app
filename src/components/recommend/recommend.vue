@@ -63,13 +63,9 @@ export default {
     };
     onMounted(() => {
       RecomMV("/personalized/mv").then((res) => {
-        // console.log(state.recommends);
         state.recommends = res.data.result;
-        console.log("推荐mv", res);
       })
       getRecommend("/personalized", 10).then((res) => {
-        console.log("推荐歌单", res);
-        // console.log(state.discList);
         state.discList = res.data.result;
       })
     });
@@ -77,7 +73,6 @@ export default {
     return {
       ...toRefs(state),
       handlePlayList,
-      // loadImage,
       scrollT,
       recomment
     };

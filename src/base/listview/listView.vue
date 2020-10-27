@@ -12,7 +12,7 @@
         <h2 class="list-group-title" ref="hello">{{group.title}}</h2>
         <ul>
           <li @click="selectItem(item)" v-for="item in group.item" :key="item.name" class="list-group-item">
-            <img class="avatar" :src="item.avatar">
+            <img class="avatar" v-lazy="item.avatar" src="../../assets/logo.png">
             <span class="name">{{item.name}}</span>
           </li>
         </ul>
@@ -70,6 +70,7 @@ export default {
       listHeight: [],
       fixedTop:0
     });
+    console.log(props.data)
     onMounted(()=>{
       calculateHeight()
     })

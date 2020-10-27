@@ -37,9 +37,18 @@ export default {
         const letterItems = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
         for (let i = 0;i<26;i++){
           letterSinger(letterItems[i]).then(res=>{
+            let temp = [];
+            if (res&&res.data&&res.data.artists){
+              res.data.artists.map((item,index)=>{
+                temp.push({
+                  name:item.name,
+                  avatar:item.img1v1Url
+                })
+              })
+            }
             state.letterArr.push({
               title:letterItems[i],
-              item:res.data.artists
+              item:temp
             })
           })
         }
