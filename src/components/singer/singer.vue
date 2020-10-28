@@ -8,9 +8,14 @@
 <script>
 import { onMounted, reactive, watch, toRefs } from "vue";
 import { hotSinger, letterSinger } from "api/singer.js";
+import {useRouter} from "vue-router";
 import ListView from 'base/listview/listView'
+import {useStore} from "vuex"
+import * as types from "../../store/mutation-types"
 export default {
   setup() {
+    const store = useStore()
+    const router = useRouter()
     const state = reactive({
       singers:[],
       letterArr:[]
@@ -22,7 +27,8 @@ export default {
         res.map((item,index)=>{
           temp.push({
             name:item.name,
-            avatar:item.img1v1Url
+            avatar:item.img1v1Url,
+            id:item.id
           })
         })
         hot.push({
@@ -42,7 +48,8 @@ export default {
               res.data.artists.map((item,index)=>{
                 temp.push({
                   name:item.name,
-                  avatar:item.img1v1Url
+                  avatar:item.img1v1Url,
+                  id:item.id
                 })
               })
             }
@@ -68,18 +75,25 @@ export default {
        state.singers = hotList.concat(allLetterSinger)
        console.log(state.singers.length)
     }
-   watch(()=>state.letterArr.length,(cur,pre)=>{
+    // 跳转到歌手详情页
+    const selectSinger = (id,url,name)=>{
+      router.push(`/singer/${id}`)
+      console.log('=====',id,url,name)
+      store.commit(types.SET_SINGER,{singerId:id,url,name});
+    }
+    watch(()=>state.letterArr.length,(cur,pre)=>{
     //  监视数据的变化，一旦获取到了数据，即可更改state.singers
      if (cur===26&&hot.length===1){
        normalizaSinger(hot,state.letterArr)
      }
    })
-
+   
    return {
      ...toRefs(state),
      getSingerByLetter,
      getHotSingerArr,
-     normalizaSinger
+     normalizaSinger,
+     selectSinger
    }
 },
   components:{

@@ -11,7 +11,7 @@
       <li v-for="group in data" :key="group.title" class="list-group">
         <h2 class="list-group-title" ref="hello">{{group.title}}</h2>
         <ul>
-          <li @click="selectItem(item)" v-for="item in group.item" :key="item.name" class="list-group-item">
+          <li @click="selectItem(item.id,item.avatar,item.name)" v-for="item in group.item" :key="item.name" class="list-group-item">
             <img class="avatar" v-lazy="item.avatar" src="../../assets/logo.png">
             <span class="name">{{item.name}}</span>
           </li>
@@ -78,8 +78,8 @@ export default {
     const listGroup = ref(null);
     const fixed = ref(null)
     const touch = {};
-    const selectItem = (item) => {
-      context.emit("select", item);
+    const selectItem = (item,url,name) => {
+      context.emit("select", item,url,name);
     };
     const onShortcutTouchStart = (e) => { 
       let anchorIndex = getData(e.target, "index");
