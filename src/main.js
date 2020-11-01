@@ -18,7 +18,7 @@ app.directive("lazy",{
             })
         })
         lazyLoadObser.observe(el)
-    }
+    }   
 })
 app.mount("#app")
 

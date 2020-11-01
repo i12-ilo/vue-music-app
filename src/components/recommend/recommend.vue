@@ -20,7 +20,7 @@
             class="item"
           >
             <div class="icon">
-               <img width="60" height="60" :src="item.picUrl" />
+               <img width="60" height="60" v-lazy="item.picUrl" src="../../assets/logo.png"/>
             </div>
             <div class="text">
               <h2 class="name" v-html="item.name"></h2>

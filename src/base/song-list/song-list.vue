@@ -31,7 +31,7 @@
       }
       
       const getDesc = (song) => {
-        console.log(song)
+        // console.log(song)
         return `${song.singer}·${song.albumName}`
       }
      

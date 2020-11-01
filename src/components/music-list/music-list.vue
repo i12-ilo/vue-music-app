@@ -34,6 +34,7 @@
 //   import {playlistMixin} from 'common/js/mixin'
   import { onMounted, reactive, toRefs, watch, ref, computed } from 'vue'
   import {useRouter} from "vue-router"
+  import {useStore} from "vuex"
 
   const RESERVED_HEIGHT = 40
   const transform = prefixStyle('transform')
@@ -59,6 +60,7 @@
      },
      setup(props,context){
          const router = useRouter()
+         const store = useStore();
          const state = reactive({
              scrollY:0,
              probeType:3,
@@ -77,7 +79,7 @@
              state.minTransalteY = -state.imageHeight + RESERVED_HEIGHT
              list.value.$el.style.top = `${state.imageHeight}px`
          })
-         const bgStyle = computed(()=>{
+        const bgStyle = computed(()=>{
            console.log(props)
            return `background-image:url(${props.bgImages})`
          })
@@ -93,7 +95,10 @@
            router.back()
         }
         const selectItem = (item, index) => {
-       
+          store.dispatch('selectPlay',{
+            list:props.songs,
+            index:index
+          })
         }
          const random = ()=>{
         
