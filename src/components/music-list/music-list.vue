@@ -101,7 +101,10 @@
           })
         }
          const random = ()=>{
-        
+           
+           store.dispatch('randomPlay',{
+             list:props.songs
+            }) 
         }
       watch(()=>state.scrollY,(newVal) =>{
         let translateY = Math.max(state.minTransalteY, newVal)

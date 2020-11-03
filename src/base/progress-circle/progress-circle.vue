@@ -10,7 +10,7 @@
 </template>
 
 <script type="text/ecmascript-6">
-import { computed, reactive, toRefs, watch } from 'vue'
+import { computed, onMounted, reactive, toRefs } from 'vue'
   export default {
     props: {
       radius: {
@@ -23,7 +23,9 @@ import { computed, reactive, toRefs, watch } from 'vue'
       }
     },
     setup(props){
-
+      onMounted(()=>{
+        console.log('-----',props.radius)
+      })
         const state = reactive({
             dashArray:Math.PI * 100
         })
@@ -33,7 +35,7 @@ import { computed, reactive, toRefs, watch } from 'vue'
 
         return {
             ...toRefs(state),
-            dashArray
+            dashOffset
         }
     }
   }

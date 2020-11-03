@@ -14,8 +14,8 @@
 </template>
 
 <script type="text/ecmascript-6">
-  import {prefixStyle} from 'common/js/dom'
-import { reactive, toRefs, watch } from 'vue'
+import {prefixStyle} from 'common/js/dom'
+import { reactive, toRefs, watch, ref } from 'vue'
 
   const progressBtnWidth = 16
   const transform = prefixStyle('transform')
@@ -33,6 +33,7 @@ import { reactive, toRefs, watch } from 'vue'
         })
         const progress = ref(null)
         const progressBar = ref(null)
+        const progressBtn = ref(null)
         const progressTouchStart = (e)=>{
         state.touch.initiated = true
         state.touch.startX = e.touches[0].pageX
@@ -64,7 +65,7 @@ import { reactive, toRefs, watch } from 'vue'
         const _triggerPercent = ()=>{
         const barWidth = progressBar.value.clientWidth - progressBtnWidth
         const percent = progress.value.clientWidth / barWidth
-        context.emit('percentChange', percent)
+        context.emit('percentchange', percent)
         }
         const _offset = (offsetWidth)=>{
          progress.value.style.width = `${offsetWidth}px`
@@ -81,6 +82,7 @@ import { reactive, toRefs, watch } from 'vue'
             ...toRefs(state),
             progress,
             progressBar,
+            progressBtn,
             progressTouchStart,
             progressTouchMove,
             progressTouchEnd,

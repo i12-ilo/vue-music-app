@@ -17,3 +17,12 @@ export function RecomMV(url) {
 export function RecomNewSong(url) {
   return Axios.get(url)
 }
+
+// 获取歌曲列表
+export function getSongList (id){
+  return Axios.get('/playlist/detail',{
+    params:{
+      id
+    }
+  })
+}

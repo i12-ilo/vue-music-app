@@ -9,3 +9,11 @@ export function getUrl(id) {
         }
     })
 }
+
+export function getLyric(mid) {
+  return Axios.get('/lyric',{
+    params:{
+      id: mid
+    }
+  })
+}

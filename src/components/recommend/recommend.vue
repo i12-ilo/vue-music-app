@@ -15,6 +15,7 @@
         <h1 class="list-title">热门歌单推荐</h1>
         <ul>
           <li
+          @click='selectItem(item)'
            v-for="item in discList"
            :key="item.id"
             class="item"
@@ -45,6 +46,9 @@ import Scroll from "base/scroll/scroll";
 import Loading from "base/loading/loading";
 import { RecomMV, getRecommend } from "api/recommend";
 import { reactive, toRefs, onMounted, ref } from "vue";
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
+import * as Types from "../../store/mutation-types"
 export default {
   setup(props, context) {
     const state = reactive({
@@ -55,12 +59,20 @@ export default {
 
     const recomment = ref(null);
     const scrollT = ref(null);
+    const router = useRouter()
+    const store = useStore()
   
     const handlePlayList = playlist => {
       const bottom = playlist.length > 0 ? "60px" : "";
       recomment.value.style.bottom = bottom;
       scrollT.value.refresh();
     };
+    const selectItem = (item)=>{
+      router.push({
+        path:`/recommend/${item.id}`
+      })
+      store.commit(Types.SET_DISC,item)
+    }
     onMounted(() => {
       RecomMV("/personalized/mv").then((res) => {
         state.recommends = res.data.result;
@@ -74,7 +86,8 @@ export default {
       ...toRefs(state),
       handlePlayList,
       scrollT,
-      recomment
+      recomment,
+      selectItem
     };
   },
 

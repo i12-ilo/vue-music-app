@@ -17,26 +17,47 @@
           <h1 class="title" v-html="currentSong.name"></h1>
           <h2 class="subtitle" v-html="currentSong.singer"></h2>
         </div>
-        <div class="middle">
-          <div class="middle-l">
+        <div class="middle"
+             @touchstart.prevent="middleTouchStart"
+             @touchmove.prevent="middleTouchMove"
+             @touchend="middleTouchEnd"
+        >
+          <div class="middle-l" ref="middleL">
             <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd" :class="cdCls">
                 <img class="image" :src="currentSong.imgUrl">
               </div>
             </div>
+            <div class="playing-lyric-wrapper">
+              <div class="playing-lyric">{{playingLyric}}</div>
+            </div>
           </div>
+           <Scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric">
+                <p ref="lyricLine"
+                   class="text"
+                   :class="{'current': currentLineNum ===index}"
+                   v-for="(line,index) in currentLyric.lines" :key="index">{{line.txt}}</p>
+              </div>
+            </div>
+          </Scroll>
         </div>
         <div class="bottom">
+         <div class="dot-wrapper">
+            <span class="dot" :class="{'active':currentShow==='cd'}"></span>
+            <span class="dot" :class="{'active':currentShow==='lyric'}"></span>
+          </div>
           <div class="progress-wrapper">
              <span class="tiem time-l">{{format(currentTime)}}</span>
              <div class="progress-bar-wrapper">
-               <progress-bar></progress-bar>
+               <progress-bar @percentchange="onProgressBarChange" :percent="percent"></progress-bar>
              </div>
              <sapn class="time time-r">{{format(duration)}}</sapn>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class="disableCls">
               <i @click="prev" class="icon-prev"></i>
@@ -55,7 +76,7 @@
       </div>
     </transition>
      <transition name="mini">
-      <div class="mini-player" v-show="!fullScreen"> 
+      <div class="mini-player" v-show="!fullScreen" @click="open"> 
         <div class="icon">
           <img :class="cdCls" width="40" height="40" :src="currentSong.imgUrl">
         </div>  
@@ -64,14 +85,16 @@
           <p class="desc"></p>
         </div>
         <div class="control">
-          <i :class="miniIcon" @click.stop="togglePlaying"></i>
+          <progress-circle :radius="radius" :percent="percent">
+          <i :class="miniIcon" class="icon-mini" @click.stop="togglePlaying"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
      </transition>
-     <audio @timeupdate="updateTime" ref="audio" :src="playUrl" @canplay="ready"></audio>
+     <audio @ended="end" @timeupdate="updateTime" ref="audio" :src="playUrl" @canplay="ready"></audio>
   </div>
 </template>
 <script>
@@ -80,9 +103,16 @@ import {useStore} from "vuex"
 import animations from 'create-keyframe-animation'
 import * as Types from "../../store/mutation-types"
 import {prefixStyle} from 'common/js/dom'
-import {getUrl} from "api/song.js"
+import {shuffle} from "common/js/util"
+import {getUrl, getLyric} from "api/song.js"
 import  ProgressBar from "base/progress-bar/progress-bar"
+import ProgressCircle from 'base/progress-circle/progress-circle'
+import {playMode} from 'common/js/config'
+import Lryic from 'lyric-parser'
+import Scroll from "base/scroll/scroll"
+
 const transform = prefixStyle('transform')
+const transitionDuration = prefixStyle('transitionDuration')
 export default {
 
   setup(){
@@ -90,9 +120,16 @@ export default {
       playUrl:'',
       songReady:false,
       currentTime:0,
-      duration:0
+      duration:0,
+      radius:32,
+      currentLyric: null,
+      currentLineNum:0,
+      currentShow:'cd',
+      touch:{},
+      playingLyric: ''
     })
     const store = useStore()
+    const lyricLine = ref(null)
     const playlist = computed(()=>{
       return store.getters.playlist
     })
@@ -104,10 +141,87 @@ export default {
     })
     const cdWrapper = ref(null)
     const audio = ref(null)
+    const lyricList = ref(null)
+    const middleL = ref(null)
     const back = () => {
       store.commit(Types.SET_FULL_SCREEN,false)
     }
 
+    const getSongLyric = ()=>{
+       getLyric(currentSong.value.id).then(res=>{
+         state.currentLyric = new Lryic(res.data.lrc.lyric,handleLyric)
+         if (playing.value){
+           state.currentLyric.play()
+         }
+       })
+       
+    }
+    const handleLyric = (lineNum,txt)=>{
+      state.currentLineNum = lineNum
+      if (lineNum > 5) {
+        let lineEl = lyricLine.value[lineNum-5]
+        lyricList.value.scrollToElement(lineEl,1000)
+      } else {
+        lyricList.value.scrollToElement(0,1000)
+      }
+      state.playingLyric = txt
+
+    }
+
+    const middleTouchStart = (e)=>{
+       state.touch.initiated = true
+        const touch = e.touches[0]
+        state.touch.startX = touch.pageX
+        state.touch.startY = touch.pageY
+    }
+
+    const middleTouchMove = (e)=>{
+     if (!state.touch.initiated) {
+          return
+        }
+        const touch = e.touches[0]
+        const deltaX = touch.pageX - state.touch.startX
+        const deltaY = touch.pageY - state.touch.startY
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+          return
+        }
+        const left = state.currentShow === 'cd' ? 0 : -window.innerWidth
+        const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + deltaX))
+        state.touch.percent = Math.abs(offsetWidth / window.innerWidth)
+        lyricList.value.$el.style[transform] = `translate3d(${offsetWidth}px,0,0)`
+        lyricList.value.$el.style[transitionDuration] = 0
+        middleL.value.style.opacity = 1 - state.touch.percent
+        middleL.value.style[transitionDuration] = 0
+    }
+    const middleTouchEnd = ()=>{
+       let offsetWidth
+        let opacity
+        if (state.currentShow === 'cd') {
+          if (state.touch.percent > 0.1) {
+            offsetWidth = -window.innerWidth
+            opacity = 0
+            state.currentShow = 'lyric'
+          } else {
+            offsetWidth = 0
+            opacity = 1
+          }
+        } else {
+          if (state.touch.percent < 0.9) {
+            offsetWidth = 0
+            state.currentShow = 'cd'
+            opacity = 1
+          } else {
+            offsetWidth = -window.innerWidth
+            opacity = 0
+          }
+        }
+        const time = 300
+        lyricList.value.$el.style[transform] = `translate3d(${offsetWidth}px,0,0)`
+        lyricList.value.$el.style[transitionDuration] = `${time}ms`
+        middleL.value.style.opacity = opacity
+        middleL.value.style[transitionDuration] = `${time}ms`
+        state.touch.initiated = false
+    }
     const open = () => {
       store.commit(Types.SET_FULL_SCREEN,true)
     }
@@ -152,7 +266,6 @@ export default {
         cdWrapper.value.style[transform] = ''
       }
       const getAudiourl = ()=>{
-        console.log(currentSong)
         if (currentSong.value.id) {
           getUrl(currentSong.value.id).then(res=>{
            state.playUrl = res.data.data[0].url
@@ -189,14 +302,50 @@ export default {
       const cdCls = computed(()=>{
         return playing.value?'play':'play pause'
       })
+      const mode = computed(()=>{
+        return store.getters.mode
+      })
+      const iconMode = computed(()=>{
+        return mode.value === playMode.sequence?'icon-sequence':mode.value===playMode.loop?"icon-loop":'icon-random'
+      })
       const togglePlaying = ()=>{
         store.commit(Types.SET_PLAYING_STATE,!playing.value)
       }
 
+      const percent = computed(()=>{
+        return state.currentTime/state.duration
+      })
+      const sequenceList = computed(()=>{
+        return store.getters.sequenceList
+      })
+      const changeMode = ()=>{
+        const modeV = (mode.value + 1) % 3
+        store.commit(Types.SET_PLAY_MODE,modeV)
+        let list = null
+        if (modeV === playMode.random){
+          list = shuffle(sequenceList.value)
+        } else {
+          list = sequenceList.value
+        }
+        resetCurrentIndex(list)
+        store.commit(Types.SET_PLAYLIST,list)
+
+      }
+
+     const resetCurrentIndex = (list)=>{
+       let index  = list.findIndex((item)=>{
+         return item.id === currentSong.value.id
+       })
+       console.log("=====",index)
+       store.commit(Types.SET_CURRENT_INDEX,index)
+      }
       const prev = ()=>{
         if (!state.songReady){
           return
         }
+        if (playlist.value.length === 1) {
+          loop()
+        } else {
         let index = currentIndex.value - 1
         if (index === -1){
           index = playlist.value.length - 1
@@ -205,6 +354,7 @@ export default {
          if (!playing.value){
           togglePlaying()
         }
+        }
         state.songReady = false
       }
 
@@ -212,6 +362,9 @@ export default {
         if (!state.songReady){
           return
         }
+        if (playlist.value.length === 1){
+          loop()
+        } else {
         let index = currentIndex.value + 1
         if (index === playlist.value.length){
           index = 0
@@ -219,6 +372,7 @@ export default {
         store.commit(Types.SET_CURRENT_INDEX,index)
         if (!playing.value){
           togglePlaying()
+        }
         }
         state.songReady = false
       }
@@ -231,6 +385,20 @@ export default {
         state.songReady = true
       }
 
+      const end = ()=>{
+        if (mode.value === playMode.loop){
+          loop()
+        } else {
+          next()
+        }
+      }
+      const loop = ()=>{
+        audio.value.currentTime = 0
+        audio.value.play()
+        if (state.currentLyric) {
+          state.currentLyric.seek()
+        }
+      }
       const disableCls = computed(()=>{
         return state.songReady?"":"disable"
       })
@@ -254,7 +422,31 @@ export default {
         }
         return num
       }
-    watch(()=>currentSong.value,()=>{
+
+      const onProgressBarChange = (percent)=>{
+        const time = percent*state.duration
+        audio.value.currentTime = time
+        if (!playing.value){
+          togglePlaying()
+        }
+        if (state.currentLyric) {
+          state.currentLyric.seek(time*1000)
+        }
+      }
+    watch(()=>currentSong.value,(newSong,oldSong)=>{
+      if (!newSong.id) {
+          return
+        }
+      if (newSong.id === oldSong.id){
+        return
+      }
+      if (state.currentLyric){
+         state.currentLyric.stop()
+         state.currentTime = 0;
+         state.playingLyric = ''
+         state.currentLineNum = 0
+      }
+        getSongLyric()
         getAudiourl();
       })
     
@@ -285,11 +477,25 @@ export default {
       error,
       disableCls,
       updateTime,
-      format
+      format,
+      percent,
+      onProgressBarChange,
+      mode,
+      iconMode,
+      changeMode,
+      end,
+      lyricLine,
+      middleL,
+      middleTouchStart,
+      middleTouchMove,
+      middleTouchEnd,
+      lyricList
     }
   },
    components:{
-     ProgressBar
+     ProgressBar,
+     ProgressCircle,
+     Scroll
    }
    }
 </script>

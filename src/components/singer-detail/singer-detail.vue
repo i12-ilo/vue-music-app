@@ -18,11 +18,9 @@ export default {
     })
 
      const title =  computed(()=>{
-     console.log(store.state)
       return store.state.singer.name
     })
    const bgImage  =  computed(()=>{
-     console.log(store.state.singer.url)
       return store.state.singer.url
     })
    
@@ -55,9 +53,7 @@ export default {
           item.imgUrl = res.data.album.blurPicUrl
           item.albumName = res.data.album.name
            if (index === state.temp.length-1) {
-              console.log('ok')
               state.songs = state.temp;
-              console.log(state.songs)
           }
         })
       })
@@ -66,7 +62,6 @@ export default {
 
     watch(()=>state.temp.length,(newValue,oldValue)=>{
       if (newValue > 0) {
-        console.log('======')
         getAlubmInfo()
       }
     })
