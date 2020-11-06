@@ -28,6 +28,22 @@ const routes = [
         path:':id',
         component:()=>import("../components/singer-detail/singer-detail.vue")
      }]
+  },
+  {
+    path:'/rank',
+    name:'rank',
+    component:()=>import('../components/rank/rank.vue'),
+    children:[
+      {
+        path:":id",
+        component:()=>import("../components/top-list/top-list.vue")
+      }
+    ]
+  },
+  {
+    path:'/search',
+    name:'search',
+    component:()=>import("../components/search/search.vue")
   }
 ]
 

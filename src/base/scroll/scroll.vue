@@ -65,15 +65,16 @@ export default {
 
       if (props.pullup) {
         scrollWrap.on("scrollEnd", () => {
+          console.log("dsfas")
           if (scrollWrap.y <= scrollWrap.maxScrollY + 50) {
-            // context.emit("scrollToEnd");
+            context.emit("scrolltoend");
           }
         });
       }
 
       if (props.beforeScroll) {
         scrollWrap.on("beforeScrollStart", () => {
-          // context.emit("beforeScroll");
+          context.emit("beforescroll");
         });
       }
     };

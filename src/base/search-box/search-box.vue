@@ -1,14 +1,14 @@
 <template>
   <div class="search-box">
     <i class="icon-search"></i>
-    <input ref="query" v-model="query" class="box" :placeholder="placeholder"/>
+    <input ref="query" v-model="queryStr" class="box" :placeholder="placeholder"/>
     <i @click="clear" v-show="query" class="icon-dismiss"></i>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
   import {debounce} from 'common/js/util'
-import { reactive, watch } from 'vue'
+import { reactive, toRefs, ref, watch } from 'vue'
 
   export default {
     props: {
@@ -18,23 +18,30 @@ import { reactive, watch } from 'vue'
       }
     },
 
-    setup(){
+    setup(props,context){
         const state  = reactive({
-            query:''
+            queryStr:''
         })
         const query = ref(null)
         const clear = ()=>{
-            state.query = ''
+            state.queryStr = ''
         }
         const setQuery = (query)=>{
-            state.query = query
+            state.queryStr = query
         }
         const blur = ()=>{
             query.value.blur()
         }
-        watch(()=>state.query,debounce((newQuery)=>{
-            context.emit('query',newQuery)
+        watch(()=>state.queryStr,debounce((newValue)=>{
+          context.emit('query',newValue)
         },200))
+        return {
+          ...toRefs(state),
+          query,
+          clear,
+          setQuery,
+          blur
+        }
     }
   }
 </script>

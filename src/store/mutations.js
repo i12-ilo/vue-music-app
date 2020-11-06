@@ -6,7 +6,7 @@ const mututaions = {
         state.singer.url = singer.url;
         state.singer.name = singer.name;
     },
-    [types.SET_PLAYING_STATE](state, flag) {
+      [types.SET_PLAYING_STATE](state, flag) {
         state.playing = flag
       },
       [types.SET_FULL_SCREEN](state, flag) {

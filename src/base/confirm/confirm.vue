@@ -15,7 +15,7 @@
 </template>
 
 <script type="text/ecmascript-6">
-import { reactive } from 'vue'
+import { reactive, toRefs } from 'vue'
   export default {
     props: {
       text: {
@@ -49,6 +49,13 @@ import { reactive } from 'vue'
        const  confirm = ()=>{
            hide();
            context.emit("confirm")
+       }
+       return {
+         show,
+         hide,
+         confirm,
+         ...toRefs(state),
+         cancel
        }
     }
   }

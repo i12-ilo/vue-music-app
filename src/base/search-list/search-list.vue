@@ -12,18 +12,22 @@
 </template>
 
 <script type="text/ecmascript-6">
+import { onMounted } from 'vue'
   export default {
     props: {
       searches: {
-        type: Array,
-        default: []
+        type: Array
       }
     },
     setup(props,context){
+      onMounted(()=>{
+        console.log('fasdf')
+      })
         const selectItem = (item)=>{
             context.emit('select',item)
         }
         const deleteOne = (item) =>{
+          
             context.emit('delete',item)
         }
         return {

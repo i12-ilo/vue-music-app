@@ -1,113 +1,108 @@
 <template>
   <scroll
-    ref="suggest"
     class="suggest"
     :data="result"
     :pullup="pullup"
+    @scrolltoend="searchMore"
     :beforeScroll="beforeScroll"
-    @scrollToEnd="searchMore"
-    @beforeScroll="listScroll"
+    @beforescroll="listScroll"
   >
     <ul class="suggest-list">
-      <li
-        @click="selectItem(item)"
-        :key="item.id"
-        class="suggest-item"
-        v-for="item in result"
-      >
+      <li @click="selectItem(item)" class="suggest-item" v-for="item in result" :key="item.id">
         <div class="icon">
-          <i :class="getIconCls(item)"></i>
+          <i class="icon-music"></i>
         </div>
         <div class="name">
-          <p class="text" v-html="getDisplayName(item)"></p>
+          <p class="text" v-html="item.name"></p>
         </div>
       </li>
-      <loading v-show="hasMore" title=""></loading>
+      <Loading v-show="hasMore"></Loading>
     </ul>
-    <div v-show="!hasMore && !result.length" class="no-result-wrapper">
+    <div class="no-result-wrapper" v-show="!hasMore && !result.length">
       <no-result title="抱歉，暂无搜索结果"></no-result>
     </div>
   </scroll>
 </template>
-
-<script type="text/ecmascript-6">
-import Scroll from "base/scroll/scroll";
-import Loading from "base/loading/loading";
-import NoResult from "base/no-result/no-result";
+<script>
+import { reactive, watch, toRefs } from "vue";
 import { search } from "api/search";
-import { ERR_OK } from "api/config";
-import { createSong } from "common/js/song";
-import { mapMutations, mapActions } from "vuex";
-import Singer from "common/js/singer";
-import { reactive, toRef } from "vue";
-
-const TYPE_SINGER = "singer";
-const perpage = 20;
-
+import Scroll from "base/scroll/scroll.vue";
+import Loading from "base/loading/loading.vue";
+import {useStore} from "vuex"
+import NoResult from "base/no-result/no-result"
 export default {
   props: {
-    showSinger: {
-      type: Boolean,
-      default: true,
-    },
     query: {
       type: String,
       default: "",
     },
   },
-
-  setup(props, context) {
+  setup(props,context) {
+    var store =  useStore()
     const state = reactive({
-      page: 1,
-      pullup: true,
-      beforeScroll: true,
-      hasMore: true,
       result: [],
+      pullup: true,
+      hasMore: true,
+      beforeScroll:true,
+
     });
-    const suggest = ref(null);
-    const refresh = () => {
-      suggest.value.refresh();
-    };
-    const search = () => {
-      state.page = 1;
-      state.hasMore = true;
-      suggest.value.scrollTo(0, 0);
-    };
-
-    const searchMore = () => {};
-
-    const listScroll = () => {};
-    const selectItem = (item) => {
-      if (item.type === TYPE_SINGER) {
-        const singer = new Singer({
-          id: item.singermid,
-          name: item.singername,
+    let moreResult = [];
+    const searchByKeywords = (keywords) => {
+      if (keywords) {
+        search(keywords).then((res) => {
+          // console.log('**&&',res)
+          moreResult = res.data.result.songs;
+          state.result = moreResult&&moreResult.slice(0, 10);
+          console.log(state.result);
         });
-        this.$router.push({
-          path: `/search/${singer.id}`,
-        });
-        this.setSinger(singer);
-      } else {
-        this.insertSong(item);
       }
-      this.$emit("select", item);
     };
+    const searchMore = () => {
+      if (!state.hasMore) {
+        return "";
+       }
+      state.result = moreResult;
+      console.log(state.result);
+     }
+
+     const  selectItem  = (item)=>{
+      console.log('-----',item)
+      let song = {
+        name:item.name,
+        singer:item.artists[0].name,
+        imgUrl:item.artists[0].img1v1Url,
+        id:item.id
+      }
+      store.dispatch('insertSong',song)
+      context.emit('select')
+    }
+    const listScroll = ()=>{
+      context.emit('listscroll')
+    }
+    watch(
+      () => props.query,
+      (newValue) => {
+        console.log("变化了");
+        searchByKeywords(newValue);
+      }
+    );
 
     return {
-        ...toRefS(state),
-        suggest,
-        searchMore,
-        listScroll,
-        selectItem
-    }
+      ...toRefs(state),
+      searchByKeywords,
+      searchMore,
+      selectItem,
+      listScroll
+    };
   },
   components: {
     Scroll,
     Loading,
-    NoResult,
+    NoResult
   },
 };
 </script>
+
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
 @import '~common/stylus/variable';
@@ -116,6 +111,7 @@ export default {
 .suggest {
   height: 100%;
   overflow: hidden;
+  opacity: 1;
 
   .suggest-list {
     padding: 0 30px;

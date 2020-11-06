@@ -1,4 +1,4 @@
-import {getLyric} from "api/song"
+
 export default class Song {
   constructor({id, singer, name, album, duration, image}) {
     this.id = id
