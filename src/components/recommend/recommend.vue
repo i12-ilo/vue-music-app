@@ -1,5 +1,5 @@
 <template>
-  <div class="recommend" ref="recommend">
+  <div class="recommend" ref="recomment">
     <scroll ref="scrollT" class="recommend-content" :data="discList">
     <div>
       <div v-if="recommends.length" class="slider-wrapper" ref="sliderWrapper">
@@ -45,7 +45,7 @@ import Slider from "base/slider/slider";
 import Scroll from "base/scroll/scroll";
 import Loading from "base/loading/loading";
 import { RecomMV, getRecommend } from "api/recommend";
-import { reactive, toRefs, onMounted, ref } from "vue";
+import { reactive, toRefs, onMounted, ref, computed, watch } from "vue";
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import * as Types from "../../store/mutation-types"
@@ -61,8 +61,14 @@ export default {
     const scrollT = ref(null);
     const router = useRouter()
     const store = useStore()
-  
-    const handlePlayList = playlist => {
+     const playlist = computed(()=>{
+        return store.getters.playlist
+      })
+
+      watch(()=>playlist.value.length,()=>{
+        handlePlaylist(playlist)
+      })
+    const handlePlaylist = playlist => {
       const bottom = playlist.length > 0 ? "60px" : "";
       recomment.value.style.bottom = bottom;
       scrollT.value.refresh();
@@ -76,6 +82,7 @@ export default {
     onMounted(() => {
       RecomMV("/personalized/mv").then((res) => {
         state.recommends = res.data.result;
+        console.log(state.recommends)
       })
       getRecommend("/personalized", 10).then((res) => {
         state.discList = res.data.result;
@@ -84,7 +91,7 @@ export default {
 
     return {
       ...toRefs(state),
-      handlePlayList,
+      handlePlaylist,
       scrollT,
       recomment,
       selectItem

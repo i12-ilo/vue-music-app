@@ -8,29 +8,29 @@
         </div>
       </div>
       <div class="search-box-wrapper">
-        <search-box ref="searchBox" @query="onQueryChange" placeholder="搜索歌曲"></search-box>
+        <search-box ref="searchBoxRef" @query="onQueryChange" placeholder="搜索歌曲"></search-box>
       </div>
       <div class="shortcut" v-show="!query">
         <switches :switches="switches" :currentIndex="currentIndex" @switch="switchItem"></switches>
         <div class="list-wrapper">
-          <scroll ref="songList" v-if="currentIndex===0" class="list-scroll" :data="playHistory">
+          <Scroll ref="songListRef" v-if="currentIndex===0" class="list-scroll" :data="playHistory">
             <div class="list-inner">
-              <song-list :songs="playHistory" @select="selectSong">
-              </song-list>
+              <SongList :songs="playHistory" @select="selectSong">
+              </SongList>
             </div>
-          </scroll>
-          <scroll :refreshDelay="refreshDelay" ref="searchList" v-if="currentIndex===1" class="list-scroll"
+          </Scroll>
+          <Scroll :refreshDelay="refreshDelay" ref="searchListRef" v-if="currentIndex===1" class="list-scroll"
                   :data="searchHistory">
             <div class="list-inner">
               <search-list @delete="deleteSearchHistory" @select="addQuery" :searches="searchHistory"></search-list>
             </div>
-          </scroll>
+          </Scroll>
         </div>
       </div>
       <div class="search-result" v-show="query">
-        <suggest :query="query" :showSinger="showSinger" @select="selectSuggest" @listScroll="blurInput"></suggest>
+        <Suggest :query="query" :showSinger="showSinger" @select="selectSuggest" @listScroll="blurInput"></Suggest>
       </div>
-      <top-tip ref="topTip">
+      <top-tip ref="topTipRef">
         <div class="tip-title">
           <i class="icon-ok"></i>
           <span class="text">1首歌曲已经添加到播放列表</span>
@@ -48,15 +48,17 @@
   import Switches from 'base/switches/switches'
   import TopTip from 'base/top-tip/top-tip'
   import Suggest from 'components/suggest/suggest'
-  import {searchMixin} from 'common/js/mixin'
-  import {mapGetters, mapActions} from 'vuex'
-  import Song from 'common/js/song'
+  // import {searchMixin} from 'common/js/mixin'
+  // import {mapGetters, mapActions} from 'vuex'
+  // import Song from 'common/js/song'
+import { reactive, toRefs, ref, computed } from 'vue'
+import { useStore } from 'vuex'
 
   export default {
-    mixins: [searchMixin],
-    data() {
-      return {
+    setup(){
+      const state = reactive({
         showFlag: false,
+        query:'',
         showSinger: false,
         currentIndex: 0,
         songs: [],
@@ -67,44 +69,83 @@
           {
             name: '搜索历史'
           }
-        ]
-      }
-    },
-    computed: {
-      ...mapGetters([
-        'playHistory'
-      ])
-    },
-    methods: {
-      show() {
-        this.showFlag = true
+       ]
+      })
+      const store = useStore()
+      const songListRef = ref(null)
+      const searchListRef = ref(null)
+      const searchBoxRef = ref(null)
+      const showListRef = ref(null)
+      const topTipRef = ref(null)
+      const playHistory = computed(()=>{
+        return store.getters.playHistory
+      })
+      const searchHistory = computed(()=>{
+        return store.getters.searchHistory
+      })
+      const show = ()=>{
+        state.showFlag = true
         setTimeout(() => {
-          if (this.currentIndex === 0) {
-            this.$refs.songList.refresh()
+          if (state.currentIndex === 0) {
+            songListRef.value.refresh()
           } else {
-            this.$refs.searchList.refresh()
+            searchListRef.value.refresh()
           }
         }, 20)
-      },
-      hide() {
-        this.showFlag = false
-      },
-      selectSong(song, index) {
-        if (index !== 0) {
-          this.insertSong(new Song(song))
-          this.$refs.topTip.show()
+      }
+
+      const hide = ()=>{
+        state.showFlag = false
+      }
+      const deleteSearchHistory = ()=>{
+        store.dispatch('deleteSearchHistory')
+        showTip()
+      }
+      const selectSong = (song,index)=>{
+        if (index!==0){
+          store.dispatch('insertSong',song)
         }
-      },
-      selectSuggest() {
-        this.$refs.topTip.show()
-        this.saveSearch()
-      },
-      switchItem(index) {
-        this.currentIndex = index
-      },
-      ...mapActions([
-        'insertSong'
-      ])
+      }
+      const onQueryChange = (query) =>{
+      state.query = query
+      }
+      const selectSuggest = ()=>{
+        store.dispatch('saveSearchHistory',state.query)
+        showTip()
+      }
+
+      const  blurInput = () => {
+        searchBoxRef.value.blur()
+      }
+      const switchItem = (index)=>{
+        state.currentIndex = index
+      }
+
+      const addQuery = (query)=>{
+        searchBoxRef.value.setQuery(query)
+      }
+
+      const showTip = ()=>{
+        topTipRef.value.show()
+      }
+      return {
+        ...toRefs(state),
+        showListRef,
+        searchListRef,
+        searchBoxRef,
+        show,
+        hide,
+        selectSong,
+        songListRef,
+        selectSuggest,
+        switchItem,
+        onQueryChange,
+        blurInput,
+        playHistory,
+        searchHistory,
+        deleteSearchHistory,
+        addQuery
+      }
     },
     components: {
       SearchBox,

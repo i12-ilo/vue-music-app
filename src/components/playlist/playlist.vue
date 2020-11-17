@@ -1,29 +1,29 @@
 <template>
   <transition name="list-fade">
-    <div class="playlist" @click="hide" v-show="showFlag">
+    <div class="playlist" v-show="showFlag" @click="hide">
       <div class="list-wrapper" @click.stop>
         <div class="list-header">
           <h1 class="title">
-            <i class="icon" :class="iconMode" @click="changeMode"></i>
+            <i class="icon"></i>
             <span class="text">{{modeText}}</span>
-            <span class="clear" @click="showConfirm"><i class="icon-clear"></i></span>
+            <span class="clear"  @click="showConfirm"><i class="icon-clear"></i></span>
           </h1>
         </div>
-        <scroll ref="listContent" :data="sequenceList" class="list-content" :refreshDelay="refreshDelay">
+        <Scroll ref="listContent" :refreshDelay="refreshDelay" :data="sequenceList" class="list-content">
           <transition-group name="list" tag="ul">
-            <li :key="item.id" ref="listItem" class="item" v-for="(item,index) in sequenceList"
+            <li  :key="item.id" ref="listItem" class="item" v-for="(item,index) in sequenceList"
                 @click="selectItem(item,index)">
               <i class="current" :class="getCurrentIcon(item)"></i>
               <span class="text">{{item.name}}</span>
-              <span @click.stop="toggleFavorite(item)" class="like">
-                <i :class="getFavoriteIcon(item)"></i>
+              <span class="like" @click.stop="toggleFavorite(item)">
+                 <i :class="getFavoriteIcon(item)"></i>
               </span>
               <span @click.stop="deleteOne(item)" class="delete">
                 <i class="icon-delete"></i>
               </span>
             </li>
           </transition-group>
-        </scroll>
+        </Scroll>
         <div class="list-operate">
           <div @click="addSong" class="add">
             <i class="icon-add"></i>
@@ -34,100 +34,149 @@
           <span>关闭</span>
         </div>
       </div>
-      <confirm ref="confirm" @confirm="confirmClear" text="是否清空播放列表" confirmBtnText="清空"></confirm>
-      <add-song ref="addSong"></add-song>
+     <Confirm  @confirm="confirmClear" ref="confirmRef" text="是否清空播放列表" confirmBtnText="清空"></Confirm>
+     <AddSong ref='addSongRef'></AddSong>
     </div>
   </transition>
 </template>
 
-<script type="text/ecmascript-6">
-//   import {mapActions} from 'vuex'
-  import {playMode} from 'common/js/config'
-  import Scroll from 'base/scroll/scroll'
-  import Confirm from 'base/confirm/confirm'
-  import AddSong from 'components/add-song/add-song'
-  import {playerMixin} from 'common/js/mixin'
-
-  export default {
-    mixins: [playerMixin],
-    data() {
-      return {
-        showFlag: false,
-        refreshDelay: 120
-      }
-    },
-    computed: {
-      modeText() {
-        return this.mode === playMode.sequence ? '顺序播放' : this.mode === playMode.random ? '随机播放' : '单曲循环'
-      }
-    },
-    methods: {
-      show() {
-        this.showFlag = true
-        setTimeout(() => {
-          this.$refs.listContent.refresh()
-          this.scrollToCurrent(this.currentSong)
-        }, 20)
-      },
-      hide() {
-        this.showFlag = false
-      },
-      showConfirm() {
-        this.$refs.confirm.show()
-      },
-      confirmClear() {
-        this.deleteSongList()
-        this.hide()
-      },
-      getCurrentIcon(item) {
-        if (this.currentSong.id === item.id) {
-          return 'icon-play'
-        }
-        return ''
-      },
-      selectItem(item, index) {
-        if (this.mode === playMode.random) {
-          index = this.playlist.findIndex((song) => {
-            return song.id === item.id
-          })
-        }
-        this.setCurrentIndex(index)
-        this.setPlayingState(true)
-      },
-      scrollToCurrent(current) {
-        const index = this.sequenceList.findIndex((song) => {
-          return current.id === song.id
-        })
-        this.$refs.listContent.scrollToElement(this.$refs.listItem[index], 300)
-      },
-      deleteOne(item) {
-        this.deleteSong(item)
-        if (!this.playlist.length) {
-          this.hide()
-        }
-      },
-      addSong() {
-        this.$refs.addSong.show()
-      },
-      ...mapActions([
-        'deleteSong',
-        'deleteSongList'
-      ])
-    },
-    watch: {
-      currentSong(newSong, oldSong) {
-        if (!this.showFlag || newSong.id === oldSong.id) {
-          return
-        }
-        this.scrollToCurrent(newSong)
-      }
-    },
-    components: {
-      Scroll,
-      Confirm,
-      AddSong
+<script>
+import { computed, reactive, toRefs, ref, watch } from 'vue'
+import { useStore } from 'vuex'
+import Scroll from "base/scroll/scroll.vue"
+import * as Types from "../../store/mutation-types"
+import {playMode} from "common/js/config.js"
+import Confirm from "base/confirm/confirm.vue"
+import AddSong from "components/add-song/add-song.vue"
+export default {
+  setup(){
+    const store = useStore()
+    const state = reactive({
+      showFlag:false,
+      refreshDelay:100
+    })
+    const listContent = ref(null)
+    const listItem = ref(null)
+    const confirmRef = ref(null)
+    const addSongRef = ref(null)
+    const show = ()=>{
+      state.showFlag = true
+      setTimeout(()=>{
+        listContent.value.refresh()
+        scrollToCurrent(currentSong.value)
+      },20)
     }
+    const favoriteList = computed(()=>{
+      return store.getters.favoriteList
+    })
+   const isFavorit = (song)=>{
+      const index = favoriteList.value.findIndex((item)=>{
+        return item.id === song.id
+      })
+      return index>-1
+    }
+      const toggleFavorite = (song)=>{
+      if (isFavorit(song)){
+        store.dispatch('deleteFavoriteList',song)
+      } else {
+        store.dispatch('saveFavoriteList',song)
+      }
+    }
+
+    const getFavoriteIcon = (song)=>{
+      if (isFavorit(song)){
+        return 'icon-favorite'
+      }
+      return 'icon-not-favorite'
+    } 
+
+    const hide = ()=>{
+      state.showFlag = false
+    }
+    const mode = computed(()=>{
+      return store.getters.mode
+    })
+    const sequenceList = computed(()=>{
+      return store.getters.sequenceList
+    })
+    const currentSong = computed(()=>{
+      return store.getters.currentSong
+    })
+    const playList = computed(()=>{
+      return store.getters.playList
+    })
+    const getCurrentIcon = (item)=>{
+      if (currentSong.value.id === item.id){
+        return 'icon-play'
+      } 
+        return ''
+    }
+    const selectItem = (item,index)=>{
+      if (playMode.random === mode.value){
+         index = playList.value.findIndex((song)=>{
+           return song.id === item.id
+         })
+      }
+      store.commit(Types.SET_CURRENT_INDEX,index)
+      store.commit(Types.SET_PLAYING_STATE,true)
+    }
+    const showConfirm = ()=>{
+      confirmRef.value.show()
+    }
+    const scrollToCurrent = (current)=>{
+      const index = sequenceList.value.findIndex((song)=>{
+        console.log('****',song)
+        return current.id=== song.id
+      })
+      listContent.value.scrollToElement(listItem.value[index],300)
+    }
+    const deleteOne = (item)=>{
+      store.dispatch('deleteSong',item)
+
+    }
+    const confirmClear = ()=>{
+      store.dispatch('deleteSongList')
+      hide()
+    }
+    const addSong = ()=>{
+      addSongRef.value.show()
+    }
+    watch(()=>{
+      return currentSong.value
+    },(newSong,oldSong)=>{
+      if (!state.showFlag || newSong.id === oldSong.id){
+        return 
+      }
+      scrollToCurrent(newSong)
+    })
+    return {
+      ...toRefs(state),
+      show,
+      hide,
+      sequenceList,
+      listContent,
+      getCurrentIcon,
+      selectItem,
+      currentSong,
+      playList,
+      listItem,
+      scrollToCurrent,
+      deleteOne,
+      showConfirm,
+      confirmRef,
+      confirmClear,
+      addSongRef,
+      addSong,
+      toggleFavorite,
+      getFavoriteIcon
+    }
+  },
+  components:{
+    Scroll,
+    Confirm,
+    AddSong
   }
+}
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">

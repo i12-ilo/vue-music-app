@@ -1,12 +1,12 @@
 <template>
-  <div class="singer" ref="singer">
+  <div class="singer" ref="singerRef">
     <list-view v-if='singers&&singers.length>0' @select="selectSinger" :data="singers" ref="list"></list-view>
     <router-view></router-view>
   </div>
 </template>
 
 <script>
-import { onMounted, reactive, watch, toRefs } from "vue";
+import { onMounted, reactive, watch, toRefs, ref,computed } from "vue";
 import { hotSinger, letterSinger } from "api/singer.js";
 import {useRouter} from "vue-router";
 import ListView from 'base/listview/listView'
@@ -21,6 +21,8 @@ export default {
       letterArr:[]
     })
     let hot = []
+    const singerRef = ref(null)
+    const list = ref(null)
     onMounted(() => {
       getHotSingerArr().then(res=>{
         let temp = [];
@@ -87,13 +89,28 @@ export default {
        normalizaSinger(hot,state.letterArr)
      }
    })
+   const handlePlaylist = (playlist)=>{
+     const bottom = playlist.value.length>0?'60':""
+     singerRef.value.style.bottom = bottom+"px"
+     list.value.refresh()
+   }
+    const playlist = computed(()=>{
+        return store.getters.playlist
+      })
+
+      watch(()=>playlist.value.length,()=>{
+        handlePlaylist(playlist)
+      })
    
    return {
      ...toRefs(state),
      getSingerByLetter,
      getHotSingerArr,
      normalizaSinger,
-     selectSinger
+     selectSinger,
+     singerRef,
+     list,
+     handlePlaylist
    }
 },
   components:{

@@ -84,7 +84,7 @@
            return `background-image:url(${props.bgImages})`
          })
         const handlePlaylist = (playlist) => {
-          const bottom = playlist.length > 0 ? '60px' : ''
+          const bottom = playlist.value.length > 0 ? '60px' : ''
           list.value.$el.style.bottom = bottom
           list.value.refresh()
         }
@@ -100,8 +100,7 @@
             index:index
           })
         }
-         const random = ()=>{
-           
+         const random = ()=>{   
            store.dispatch('randomPlay',{
              list:props.songs
             }) 
@@ -133,6 +132,13 @@
         bgImage.value.style[transform] = `scale(${scale})`
         bgImage.value.style.zIndex = zIndex
       })
+      const playlist = computed(()=>{
+        return store.getters.playlist
+      })
+
+      watch(()=>playlist.value.length,()=>{
+        handlePlaylist(playlist)
+      })
         return {
              ...toRefs(state),
              bgImage,
@@ -145,7 +151,8 @@
              list,
              selectItem,
              random,
-             bgStyle
+             bgStyle,
+             playlist
          }
      },
      components:{

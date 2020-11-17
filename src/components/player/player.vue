@@ -69,7 +69,7 @@
               <i @click="next" class="icon-next"></i>
             </div>
              <div class="icon i-right">
-              <i class="icon icon-not-favorite"></i>
+              <i class="icon" @click="toggleFavorite(currentSong)" :class="getFavoriteIcon(currentSong)"></i>
             </div>
           </div>
         </div>
@@ -89,12 +89,13 @@
           <i :class="miniIcon" class="icon-mini" @click.stop="togglePlaying"></i>
           </progress-circle>
         </div>
-        <div class="control">
+        <div class="control" @click.stop="showPlayList">
           <i class="icon-playlist"></i>
         </div>
       </div>
      </transition>
-     <audio @ended="end" @timeupdate="updateTime" ref="audio" :src="playUrl" @canplay="ready"></audio>
+     <PlayList ref="playlistRef"></PlayList>
+     <audio @ended="end" @timeupdate="updateTime" ref="audioRef" :src="playUrl" @canplay="ready"></audio>
   </div>
 </template>
 <script>
@@ -110,6 +111,7 @@ import ProgressCircle from 'base/progress-circle/progress-circle'
 import {playMode} from 'common/js/config'
 import Lryic from 'lyric-parser'
 import Scroll from "base/scroll/scroll"
+import PlayList from "components/playlist/playlist.vue"
 
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transitionDuration')
@@ -130,6 +132,7 @@ export default {
     })
     const store = useStore()
     const lyricLine = ref(null)
+    const playlistRef = ref(null)
     const playlist = computed(()=>{
       return store.getters.playlist
     })
@@ -140,13 +143,16 @@ export default {
       return store.getters.currentSong
     })
     const cdWrapper = ref(null)
-    const audio = ref(null)
+    const audioRef = ref(null)
     const lyricList = ref(null)
     const middleL = ref(null)
     const back = () => {
       store.commit(Types.SET_FULL_SCREEN,false)
     }
-
+    const showPlayList = ()=>{
+      console.log(playlistRef.value)
+      playlistRef.value.show()
+    }
     const getSongLyric = ()=>{
        getLyric(currentSong.value.id).then(res=>{
          state.currentLyric = new Lryic(res.data.lrc.lyric,handleLyric)
@@ -155,6 +161,30 @@ export default {
          }
        })
        
+    }
+    const favoriteList = computed(()=>{
+      return store.getters.favoriteList
+    })
+
+    const isFavorit = (song)=>{
+      const index = favoriteList.value.findIndex((item)=>{
+        return item.id === song.id
+      })
+      return index>-1
+    }
+    const getFavoriteIcon = (song)=>{
+      if (isFavorit(song)){
+        return 'icon-favorite'
+      }
+      return 'icon-not-favorite'
+    }
+
+    const toggleFavorite = (song)=>{
+      if (isFavorit(song)){
+        store.dispatch('deleteFavoriteList',song)
+      } else {
+        store.dispatch('saveFavoriteList',song)
+      }
     }
     const handleLyric = (lineNum,txt)=>{
       state.currentLineNum = lineNum
@@ -379,6 +409,7 @@ export default {
 
       const ready = ()=>{
         state.songReady = true
+        store.dispatch('savePlayHistory',currentSong.value)
       }
 
       const error = ()=>{
@@ -393,8 +424,8 @@ export default {
         }
       }
       const loop = ()=>{
-        audio.value.currentTime = 0
-        audio.value.play()
+        audioRef.value.currentTime = 0
+        audioRef.value.play()
         if (state.currentLyric) {
           state.currentLyric.seek()
         }
@@ -425,7 +456,7 @@ export default {
 
       const onProgressBarChange = (percent)=>{
         const time = percent*state.duration
-        audio.value.currentTime = time
+        audioRef.value.currentTime = time
         if (!playing.value){
           togglePlaying()
         }
@@ -451,12 +482,12 @@ export default {
       })
     
     watch(()=>playing.value,(newPlaying)=>{
-      newPlaying?audio.value.play():audio.value.pause()
+      newPlaying?audioRef.value.play():audioRef.value.pause()
     })
     return {
       ...toRefs(state),
       playlist,
-      audio,
+      audioRef,
       fullScreen,
       currentSong,
       back,
@@ -489,13 +520,18 @@ export default {
       middleTouchStart,
       middleTouchMove,
       middleTouchEnd,
-      lyricList
+      lyricList,
+      showPlayList,
+      playlistRef,
+      getFavoriteIcon,
+      toggleFavorite
     }
   },
    components:{
      ProgressBar,
      ProgressCircle,
-     Scroll
+     Scroll,
+     PlayList
    }
    }
 </script>

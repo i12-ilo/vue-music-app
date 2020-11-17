@@ -44,6 +44,11 @@ const routes = [
     path:'/search',
     name:'search',
     component:()=>import("../components/search/search.vue")
+  },
+  {
+    path:'/user',
+    name: 'user',
+    component:()=>import("../components/user-center/user-center.vue")
   }
 ]
 

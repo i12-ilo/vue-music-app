@@ -18,5 +18,9 @@ module.exports = {
     },
     configureWebpack: {
         devtool: '#eval-source-map'
+    },
+    devServer:{
+        host:'10.101.1.227',
+        port:8080
     }
 }
