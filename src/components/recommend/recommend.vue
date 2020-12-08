@@ -59,6 +59,8 @@ export default {
 
     const recomment = ref(null);
     const scrollT = ref(null);
+    onMounted(()=>{
+    })
     const router = useRouter()
     const store = useStore()
      const playlist = computed(()=>{

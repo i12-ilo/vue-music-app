@@ -56,6 +56,7 @@ export default {
         probeType: props.probeType,
         click: props.click,
       });
+      console.log(scrollWrap,"scroll里的")
       
       if (props.listenScroll) {
           scrollWrap.on("scroll", (pos) => {

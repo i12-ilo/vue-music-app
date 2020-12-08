@@ -41,6 +41,7 @@
       const slider = ref(null);
       const sliderGroup = ref(null);
       onMounted(()=>{
+        console.log(slider.value)
         setTimeout(() => {
          setSliderWidth()
          initSlider()
@@ -88,6 +89,7 @@
            snapSpeed: 400
          });
          sliderWrapper.on('scrollEnd', () => {
+           console.log(sliderWrapper.getCurrentPage,"sdfsadf")
            let pageIndex = sliderWrapper.getCurrentPage().pageX
            if (props.loop) {
              pageIndex -= 1
